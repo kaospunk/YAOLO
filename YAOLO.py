@@ -40,13 +40,13 @@ def search(s, args):
     current_page = 1
     collected_users = 0
     total_users = 0
+    output_file = None
 
     if not args.max_users:
         args.max_users = float('inf')
 
     while args.max_users > collected_users:
         time.sleep(random.randint(1, 5))
-        print(url + '&page=' + str(current_page))
         r = s.get(url + '&page=' + str(current_page),  headers=headers)
         root = html.document_fromstring(r.text)
         codejson = root.xpath('//code[contains(text(),"GLOBAL_SEARCH_HEADER")]')
@@ -77,7 +77,12 @@ def search(s, args):
                             emp_name.append('https://www.linkedin.com/in/' + entry['publicIdentifier'])
                         else:
                             emp_name.append('')
-                        print(','.join(emp_name))
+                        if args.output:
+                            if output_file is None:
+                                output_file = open(args.output, "w")
+                            output_file.write(','.join(emp_name) + '\n')
+                        else:
+                            print(','.join(emp_name))
                         collected_users += 1
 
         current_page += 1
@@ -104,6 +109,10 @@ def main():
     parser.add_argument('-t',
                         dest='title',
                         help='An optional keyword to search for in job titles')
+
+    parser.add_argument('-o',
+                        dest='output',
+                        help='Name of a file to output results to')
 
     args = parser.parse_args()
     s = requests.Session()
